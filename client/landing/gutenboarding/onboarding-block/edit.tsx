@@ -14,6 +14,7 @@ import { SITE_STORE } from '../stores/site';
 import { USER_STORE } from '../stores/user';
 import DesignSelector from './design-selector';
 import CreateSite from './create-site';
+import CreateSiteError from '../components/create-site-error';
 import type { Attributes } from './types';
 import { Step, usePath, useNewQueryParam } from '../path';
 import AcquireIntent from './acquire-intent';
@@ -29,6 +30,7 @@ const OnboardingEdit: FunctionComponent< BlockEditProps< Attributes > > = () => 
 	const { createSite } = useDispatch( STORE_KEY );
 	const isRedirecting = useSelect( ( select ) => select( STORE_KEY ).getIsRedirecting() );
 	const isCreatingSite = useSelect( ( select ) => select( SITE_STORE ).isFetchingSite() );
+	const newSiteError = useSelect( ( select ) => select( SITE_STORE ).getNewSiteError() );
 	const newSite = useSelect( ( select ) => select( SITE_STORE ).getNewSite() );
 	const currentUser = useSelect( ( select ) => select( USER_STORE ).getCurrentUser() );
 	const shouldTriggerCreate = useNewQueryParam();
@@ -88,6 +90,16 @@ const OnboardingEdit: FunctionComponent< BlockEditProps< Attributes > > = () => 
 
 	const redirectToLatestStep = <Redirect to={ getLatestStepPath() } />;
 
+	function createSiteOrError() {
+		if ( newSiteError ) {
+			return <CreateSiteError linkTo={ getLatestStepPath() } />;
+		} else if ( canUseCreateSiteStep() ) {
+			return <CreateSite />;
+		}
+
+		return redirectToLatestStep;
+	}
+
 	return (
 		<div className="onboarding-block">
 			{ isCreatingSite && (
@@ -113,9 +125,7 @@ const OnboardingEdit: FunctionComponent< BlockEditProps< Attributes > > = () => 
 					{ canUseStyleStep() ? <Plans /> : redirectToLatestStep }
 				</Route>
 
-				<Route path={ makePath( Step.CreateSite ) }>
-					{ canUseCreateSiteStep() ? <CreateSite /> : redirectToLatestStep }
-				</Route>
+				<Route path={ makePath( Step.CreateSite ) }>{ createSiteOrError() }</Route>
 			</Switch>
 		</div>
 	);

@@ -1,0 +1,55 @@
+@import 'assets/stylesheets/gutenberg-base-styles';
+@import '../../mixins';
+
+.create-site-error__background {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 50;
+	background-color: $white;
+
+	.create-site-error__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		height: 56px;
+		padding: 8px;
+	}
+
+	.create-site-error__content {
+		padding: 1em;
+		padding: 0 20px 20px;
+
+		position: absolute;
+		top: 25%;
+		left: 50%;
+		width: 100%;
+		max-width: 540px;
+		transform: translateX( -50% );
+
+		@include break-mobile {
+			top: 35%;
+			left: 20%;
+		}
+
+		.create-site-error__heading {
+			text-align: left;
+			@include onboarding-heading-text-mobile;
+			@include break-mobile {
+				@include onboarding-heading-text;
+			}
+		}
+
+		.create-site-error__message {
+			text-align: left;
+			margin-top: 1em;
+			margin-bottom: 1.5em;
+		}
+
+		.create-site-error__links {
+			text-align: left;
+		}
+	}
+}

@@ -160,8 +160,8 @@ const Header: React.FunctionComponent = () => {
 	// todo: just for testing purposes, replace with the actual language picker
 	const handleChangeLocale = ( changeLocale: ChangeLocaleFunction ) => {
 		if ( i18nLocale === 'en' ) {
-			push( makePath( Step[ currentStep ], 'fr' ) );
-			changeLocale( 'fr' );
+			push( makePath( Step[ currentStep ], 'ar' ) );
+			changeLocale( 'ar' );
 		} else {
 			push( makePath( Step[ currentStep ], 'en' ) );
 			changeLocale( 'en' );

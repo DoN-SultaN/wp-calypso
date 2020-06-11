@@ -134,10 +134,9 @@ window.AppBoot = async () => {
 function WindowLocaleEffectManager() {
 	const { isRTL, i18nLocale } = useI18n();
 	const isRtl = isRTL();
-	const htmlLangAttribute = i18nLocale;
 
 	React.useEffect( () => {
-		document.documentElement.lang = htmlLangAttribute;
+		document.documentElement.lang = i18nLocale;
 		document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
 		document.body.classList[ isRtl ? 'add' : 'remove' ]( 'rtl' );
 

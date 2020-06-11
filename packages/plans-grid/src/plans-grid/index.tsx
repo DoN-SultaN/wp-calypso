@@ -6,7 +6,7 @@ import { Button } from '@wordpress/components';
 import { Icon, chevronDown } from '@wordpress/icons';
 import { useDispatch } from '@wordpress/data';
 import { useI18n } from '@automattic/react-i18n';
-import { Plans } from '@automattic/data-stores';
+import { Plans, DomainSuggestions } from '@automattic/data-stores';
 import classNames from 'classnames';
 
 /**
@@ -29,9 +29,10 @@ const isMobile = window.navigator.userAgent.indexOf( 'Mobi' ) > -1;
 export interface Props {
 	header: React.ReactElement;
 	currentPlan?: Plans.Plan;
+	currentDomain?: DomainSuggestions.DomainSuggestion;
 }
 
-const PlansGrid: React.FunctionComponent< Props > = ( { header, currentPlan } ) => {
+const PlansGrid: React.FunctionComponent< Props > = ( { header, currentPlan, currentDomain } ) => {
 	const { __ } = useI18n();
 
 	const { setPlan } = useDispatch( PLANS_STORE );
@@ -56,6 +57,7 @@ const PlansGrid: React.FunctionComponent< Props > = ( { header, currentPlan } ) 
 					<PlansTable
 						selectedPlanSlug={ currentPlan?.storeSlug ?? '' }
 						onPlanSelect={ setPlan }
+						currentDomain={ currentDomain }
 					></PlansTable>
 				</div>
 			</div>

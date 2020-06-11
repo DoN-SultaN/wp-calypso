@@ -3,7 +3,7 @@
  */
 import * as React from 'react';
 import Modal from 'react-modal';
-import { useDispatch } from '@wordpress/data';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import PlansGrid from '@automattic/plans-grid';
@@ -16,6 +16,7 @@ import { useTrackModal } from '../../hooks/use-track-modal';
 import { useSelectedPlan } from '../../hooks/use-selected-plan';
 import ActionButtons from '../action-buttons';
 import { Title, SubTitle } from '../titles';
+import { STORE_KEY as ONBOARD_STORE } from '../../stores/onboard';
 
 /**
  * Style dependencies
@@ -31,6 +32,8 @@ const PlansGridModal: React.FunctionComponent< Props > = ( { onClose } ) => {
 	Modal.setAppElement( '#wpcom' );
 
 	const plan = useSelectedPlan();
+	const { domain } = useSelect( ( select ) => select( ONBOARD_STORE ).getState() );
+
 	const { setPlan } = useDispatch( PLANS_STORE );
 
 	React.useEffect( () => {
@@ -85,7 +88,7 @@ const PlansGridModal: React.FunctionComponent< Props > = ( { onClose } ) => {
 			overlayClassName="plans-modal-overlay"
 			bodyOpenClassName="has-plans-modal"
 		>
-			<PlansGrid header={ header } currentPlan={ plan } />
+			<PlansGrid currentDomain={ domain } header={ header } currentPlan={ plan } />
 		</Modal>
 	);
 };

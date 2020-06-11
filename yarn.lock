@@ -4069,7 +4069,7 @@
     "@types/wordpress__data" "*"
     "@types/wordpress__media-utils" "*"
 
-"@types/wordpress__element@*", "@types/wordpress__element@^2.4.1":
+"@types/wordpress__element@*":
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/@types/wordpress__element/-/wordpress__element-2.4.1.tgz#367fb0bd6194cd74d96470dccad400e9fccd3a5a"
   integrity sha512-cQpqHFnAQK6v2CP9WBrgXKqT9dFITTYc9E37KN74INOPl3Bvznc0tWMerFJcPXjfd0PLyE0tzgnSIh9+GDbhnw==

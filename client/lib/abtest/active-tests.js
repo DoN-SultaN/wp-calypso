@@ -167,8 +167,8 @@ export default {
 		allowExistingUsers: false,
 		countryCodeTargets: [ 'US' ],
 	},
-	showPremiumPlanBump: {
-		datestamp: '20200402',
+	showBusinessPlanBump: {
+		datestamp: '20200608',
 		variations: {
 			variantShowPlanBump: 50,
 			control: 50,

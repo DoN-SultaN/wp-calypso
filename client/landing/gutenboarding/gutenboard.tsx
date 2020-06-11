@@ -25,11 +25,7 @@ import { usePageViewTracksEvents } from './hooks/use-page-view-tracks-events';
 
 registerBlockType( name, settings );
 
-interface Props {
-	changeLocale: ( locale: string ) => {};
-}
-
-const Gutenboard: React.FunctionComponent< Props > = ( { changeLocale } ) => {
+const Gutenboard: React.FunctionComponent = () => {
 	const { __ } = useI18n();
 	useOnSiteCreation();
 	usePageViewTracksEvents();
@@ -75,7 +71,7 @@ const Gutenboard: React.FunctionComponent< Props > = ( { changeLocale } ) => {
 		<div className="block-editor__container">
 			<DropZoneProvider>
 				<div className="gutenboarding__layout edit-post-layout">
-					<Header changeLocale={ changeLocale } />
+					<Header />
 					<BlockEditorProvider
 						useSubRegistry={ false }
 						value={ [ onboardingBlock.current ] }

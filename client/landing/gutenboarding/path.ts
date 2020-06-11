@@ -21,6 +21,7 @@ export const Step = {
 	Login: 'login',
 	CreateSite: 'create-site',
 	Plans: 'plans',
+	Error: 'error', // tofix: remove this test step
 } as const;
 
 // We remove falsey `steps` with `.filter( Boolean )` as they'd mess up our |-separated route pattern.

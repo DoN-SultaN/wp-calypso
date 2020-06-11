@@ -126,6 +126,11 @@ const OnboardingEdit: FunctionComponent< BlockEditProps< Attributes > > = () => 
 				</Route>
 
 				<Route path={ makePath( Step.CreateSite ) }>{ createSiteOrError() }</Route>
+
+				{ /* tofix: remove this testing route (and step def in path.ts) */ }
+				<Route exact path={ makePath( 'error' ) }>
+					<CreateSiteError linkTo={ makePath( 'create-site' ) } />
+				</Route>
 			</Switch>
 		</div>
 	);

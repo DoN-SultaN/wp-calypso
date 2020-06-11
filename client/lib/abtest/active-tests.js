@@ -167,4 +167,13 @@ export default {
 		allowExistingUsers: false,
 		countryCodeTargets: [ 'US' ],
 	},
+	showPremiumPlanBump: {
+		datestamp: '20200402',
+		variations: {
+			variantShowPlanBump: 50,
+			control: 50,
+		},
+		defaultVariation: 'control',
+		allowExistingUsers: true,
+	},
 };

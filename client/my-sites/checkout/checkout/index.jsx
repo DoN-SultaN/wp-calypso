@@ -89,7 +89,6 @@ import { isRequestingPlans } from 'state/plans/selectors';
 import { isApplePayAvailable } from 'lib/web-payment';
 import PageViewTracker from 'lib/analytics/page-view-tracker';
 import isAtomicSite from 'state/selectors/is-site-automated-transfer';
-import getPreviousPath from 'state/selectors/get-previous-path.js';
 import config from 'config';
 import { loadTrackingTool } from 'state/analytics/actions';
 import {
@@ -457,13 +456,25 @@ export class Checkout extends React.Component {
 		}
 	}
 
-	maybeRedirectToConciergeNudge( pendingOrReceiptId ) {
+	maybeShowPlanBumpOfferConcierge( receiptId, stepResult ) {
+		const { cart, selectedSiteSlug } = this.props;
+
+		if ( hasPersonalPlan( cart ) && stepResult && isEmpty( stepResult.failed_purchases ) ) {
+			if ( 'variantShowPlanBump' === abtest( 'showPremiumPlanBump' ) ) {
+				return `/checkout/${ selectedSiteSlug }/offer-plan-upgrade/premium/${ receiptId }`;
+			}
+		}
+
+		return;
+	}
+
+	maybeRedirectToConciergeNudge( pendingOrReceiptId, stepResult, shouldHideUpsellNudges ) {
 		// Using hideNudge prop will disable any redirect to Nudge
-		if ( this.props.hideNudge ) {
+		if ( this.props.hideNudge || shouldHideUpsellNudges ) {
 			return;
 		}
 
-		const { cart, selectedSiteSlug, previousRoute } = this.props;
+		const { cart, selectedSiteSlug } = this.props;
 
 		// If the user has upgraded a plan from seeing our upsell (we find this by checking the previous route is /offer-plan-upgrade),
 		// then skip this section so that we do not show further upsells.
@@ -471,11 +482,15 @@ export class Checkout extends React.Component {
 			config.isEnabled( 'upsell/concierge-session' ) &&
 			! hasConciergeSession( cart ) &&
 			! hasJetpackPlan( cart ) &&
-			( hasBloggerPlan( cart ) || hasPersonalPlan( cart ) || hasPremiumPlan( cart ) ) &&
-			! previousRoute.includes( `/checkout/${ selectedSiteSlug }/offer-plan-upgrade` )
+			( hasBloggerPlan( cart ) || hasPersonalPlan( cart ) || hasPremiumPlan( cart ) )
 		) {
 			// A user just purchased one of the qualifying plans
 			// Show them the concierge session upsell page
+
+			const upgradePath = this.maybeShowPlanBumpOfferConcierge( pendingOrReceiptId, stepResult );
+			if ( upgradePath ) {
+				return upgradePath;
+			}
 
 			// The conciergeUpsellDial test is used when we need to quickly dial back the volume of concierge sessions
 			// being offered and so sold, to be inline with HE availability.
@@ -486,7 +501,7 @@ export class Checkout extends React.Component {
 		}
 	}
 
-	getCheckoutCompleteRedirectPath = () => {
+	getCheckoutCompleteRedirectPath = ( shouldHideUpsellNudges = false ) => {
 		// TODO: Cleanup and simplify this function.
 		// I wouldn't be surprised if it doesn't work as intended in some scenarios.
 		// Especially around the Concierge / Checklist logic.
@@ -597,7 +612,11 @@ export class Checkout extends React.Component {
 			return `${ signupDestination }/${ pendingOrReceiptId }`;
 		}
 
-		const redirectPathForConciergeUpsell = this.maybeRedirectToConciergeNudge( pendingOrReceiptId );
+		const redirectPathForConciergeUpsell = this.maybeRedirectToConciergeNudge(
+			pendingOrReceiptId,
+			stepResult,
+			shouldHideUpsellNudges
+		);
 		if ( redirectPathForConciergeUpsell ) {
 			return redirectPathForConciergeUpsell;
 		}
@@ -626,7 +645,7 @@ export class Checkout extends React.Component {
 		window.location.href = redirectUrl;
 	}
 
-	handleCheckoutCompleteRedirect = () => {
+	handleCheckoutCompleteRedirect = ( shouldHideUpsellNudges = false ) => {
 		let product, purchasedProducts, renewalItem;
 
 		const {
@@ -638,7 +657,7 @@ export class Checkout extends React.Component {
 			translate,
 		} = this.props;
 
-		const redirectPath = this.getCheckoutCompleteRedirectPath();
+		const redirectPath = this.getCheckoutCompleteRedirectPath( shouldHideUpsellNudges );
 		const destinationFromCookie = retrieveSignupDestination();
 
 		this.props.clearPurchases();
@@ -963,7 +982,6 @@ export default connect(
 			isPlansListFetching: isRequestingPlans( state ),
 			isSitePlansListFetching: isRequestingSitePlans( state, selectedSiteId ),
 			planSlug: getUpgradePlanSlugFromPath( state, selectedSiteId, props.product ),
-			previousRoute: getPreviousPath( state ),
 			isJetpackNotAtomic:
 				isJetpackSite( state, selectedSiteId ) && ! isAtomicSite( state, selectedSiteId ),
 		};

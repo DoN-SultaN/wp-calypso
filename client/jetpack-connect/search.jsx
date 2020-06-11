@@ -29,10 +29,12 @@ import { checkUrl, dismissUrl } from 'state/jetpack-connect/actions';
 import { FLOW_TYPES } from 'state/jetpack-connect/constants';
 import { getConnectingSite, getJetpackSiteByUrl } from 'state/jetpack-connect/selectors';
 import { getCurrentUserId } from 'state/current-user/selectors';
+import getSites from 'state/selectors/get-sites';
 import { isRequestingSites } from 'state/sites/selectors';
 import { persistSession, retrieveMobileRedirect } from './persistence-utils';
 import { recordTracksEvent } from 'state/analytics/actions';
 import { urlToSlug } from 'lib/url';
+import searchSites from 'components/search-sites';
 
 import {
 	JPC_PATH_PLANS,
@@ -56,7 +58,7 @@ import {
 
 const debug = debugModule( 'calypso:jetpack-connect:main' );
 
-export class JetpackConnectMain extends Component {
+export class SearchPurchase extends Component {
 	static propTypes = {
 		locale: PropTypes.string,
 		path: PropTypes.string,
@@ -69,16 +71,35 @@ export class JetpackConnectMain extends Component {
 				currentUrl: cleanUrl( this.props.url ),
 				shownUrl: this.props.url,
 				waitingForSites: false,
+				candidateSites: this.props.searchSites( this.props.url ),
 		  }
 		: {
 				currentUrl: '',
 				shownUrl: '',
 				waitingForSites: false,
+				candidateSites: [],
 		  };
+
+	getCandidateSites( url ) {
+		this.props.searchSites( url );
+		let candidateSites = [];
+
+		if ( this.props.sitesFound ) {
+			candidateSites = this.props.sitesFound.map( ( site ) => ( {
+				label: site.URL,
+				category: this.props.translate( 'Choose site' ),
+			} ) );
+		}
+
+		this.setState( { candidateSites } );
+	}
 
 	UNSAFE_componentWillMount() {
 		if ( this.props.url ) {
 			this.checkUrl( cleanUrl( this.props.url ) );
+		}
+		if ( ! this.props.isLoggedIn ) {
+			this.goToRemoteInstall( JPC_PATH_REMOTE_INSTALL );
 		}
 	}
 
@@ -106,16 +127,28 @@ export class JetpackConnectMain extends Component {
 
 	componentDidUpdate() {
 		const { isMobileAppFlow, skipRemoteInstall, forceRemoteInstall } = this.props;
+		const status = this.getStatus();
 
 		if (
-			this.getStatus() === NOT_CONNECTED_JETPACK &&
+			status === NOT_CONNECTED_JETPACK &&
 			this.isCurrentUrlFetched() &&
 			! forceRemoteInstall &&
 			! this.state.redirecting
 		) {
 			return this.goToRemoteAuth( this.props.siteHomeUrl );
 		}
-		if ( this.getStatus() === ALREADY_OWNED && ! this.state.redirecting ) {
+
+		if ( status === IS_DOT_COM || status === ALREADY_CONNECTED ) {
+			const product = window.location.href.split( '/' )[ 5 ];
+
+			let redirectTo = '/checkout/' + urlToSlug( this.state.currentUrl );
+			if ( product ) {
+				redirectTo += '/' + product;
+			}
+			page.redirect( redirectTo );
+		}
+
+		if ( status === ALREADY_OWNED && ! this.state.redirecting ) {
 			if ( isMobileAppFlow ) {
 				return this.redirectToMobileApp( 'already-connected' );
 			}
@@ -129,8 +162,8 @@ export class JetpackConnectMain extends Component {
 		}
 
 		if (
-			includes( [ NOT_JETPACK, NOT_ACTIVE_JETPACK ], this.getStatus() ) ||
-			( this.getStatus() === NOT_CONNECTED_JETPACK && forceRemoteInstall )
+			includes( [ NOT_JETPACK, NOT_ACTIVE_JETPACK ], status ) ||
+			( status === NOT_CONNECTED_JETPACK && forceRemoteInstall )
 		) {
 			if (
 				config.isEnabled( 'jetpack/connect/remote-install' ) &&
@@ -156,6 +189,15 @@ export class JetpackConnectMain extends Component {
 			}
 		};
 	}
+
+	goToCheckout = this.makeSafeRedirectionFunction( ( url ) => {
+		this.props.recordTracksEvent( 'calypso_jpc_success_redirect', {
+			url: url,
+			type: 'search_checkout',
+		} );
+
+		page.redirect( `checkout/${ urlToSlug( url ) }/jetpack_search` );
+	} );
 
 	goToPlans = this.makeSafeRedirectionFunction( ( url ) => {
 		this.props.recordTracksEvent( 'calypso_jpc_success_redirect', {
@@ -214,12 +256,13 @@ export class JetpackConnectMain extends Component {
 		);
 	}
 
-	handleUrlChange = ( event ) => {
-		const url = event.target.value;
+	handleUrlChange = ( url ) => {
 		this.setState( {
 			currentUrl: cleanUrl( url ),
 			shownUrl: url,
 		} );
+
+		this.getCandidateSites( url );
 	};
 
 	checkUrl( url ) {
@@ -267,9 +310,9 @@ export class JetpackConnectMain extends Component {
 			return SITE_BLACKLISTED;
 		}
 
-		if ( this.checkProperty( 'userOwnsSite' ) ) {
-			return ALREADY_OWNED;
-		}
+		// if ( this.checkProperty( 'userOwnsSite' ) ) {
+		// 	return ALREADY_OWNED;
+		// }
 
 		if ( this.props.jetpackConnectSite.installConfirmedByUser === false ) {
 			return NOT_JETPACK;
@@ -337,12 +380,15 @@ export class JetpackConnectMain extends Component {
 	}
 
 	renderSiteInput( status ) {
+		const product = window.location.href.split( '/' )[ 5 ];
+
 		return (
 			<Card className="jetpack-connect__site-url-input-container">
 				{ ! this.isCurrentUrlFetching() &&
 				this.isCurrentUrlFetched() &&
 				! this.props.jetpackConnectSite.isDismissed &&
-				status ? (
+				status &&
+				product !== 'jetpack_search' ? (
 					<JetpackConnectNotices
 						noticeType={ status }
 						onDismissClick={ IS_DOT_COM === status ? this.goBack : this.dismissUrl }
@@ -361,6 +407,8 @@ export class JetpackConnectMain extends Component {
 						this.isCurrentUrlFetching() || this.state.redirecting || this.state.waitingForSites
 					}
 					isInstall={ this.isInstall() }
+					product={ 'jetpack_search' }
+					candidateSites={ this.state.candidateSites }
 				/>
 			</Card>
 		);
@@ -400,6 +448,8 @@ const connectComponent = connect(
 		const isMobileAppFlow = !! mobileAppRedirect;
 		const jetpackConnectSite = getConnectingSite( state );
 		const siteData = jetpackConnectSite.data || {};
+		const sites = getSites( state );
+
 		const skipRemoteInstall = siteData.skipRemoteInstall;
 
 		return {
@@ -412,6 +462,7 @@ const connectComponent = connect(
 			mobileAppRedirect,
 			skipRemoteInstall,
 			siteHomeUrl: siteData.urlAfterRedirects || jetpackConnectSite.url,
+			sites,
 		};
 	},
 	{
@@ -421,4 +472,4 @@ const connectComponent = connect(
 	}
 );
 
-export default flowRight( connectComponent, localize )( JetpackConnectMain );
+export default flowRight( connectComponent, searchSites, localize )( SearchPurchase );

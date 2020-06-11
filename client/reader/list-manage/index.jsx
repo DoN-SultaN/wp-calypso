@@ -2,7 +2,7 @@
  * External dependencies
  */
 import * as React from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 
 /**
  * Internal dependencies
@@ -26,12 +26,16 @@ import SectionNav from 'components/section-nav';
 import NavTabs from 'components/section-nav/tabs';
 import NavItem from 'components/section-nav/item';
 import Main from 'components/main';
+import { addReaderListFeedByUrl } from 'state/reader/lists/actions';
 import ListItem from './list-item';
 import './style.scss';
 
 function ReaderListEdit( props ) {
 	const { list, listItems } = props;
 	const selectedSection = props.showItems ? 'items' : 'details';
+	const addFeedText = React.useRef( null );
+	const dispatch = useDispatch();
+
 	return (
 		<>
 			{ ! list && <QueryReaderList owner={ props.owner } slug={ props.slug } /> }
@@ -117,8 +121,41 @@ function ReaderListEdit( props ) {
 								</Card>
 							</>
 						) }
-						{ selectedSection === 'items' &&
-							props.listItems?.map( ( item ) => <ListItem key={ item.ID } item={ item } /> ) }
+						{ selectedSection === 'items' && (
+							<>
+								<Card>
+									<FormSectionHeading>Add a feed</FormSectionHeading>
+									<FormFieldset>
+										<FormLabel htmlFor="new-feed-url">URL</FormLabel>
+										<FormTextInput id="new-feed-url" name="new-feed-url" inputRef={ addFeedText } />
+										<FormSettingExplanation>
+											The address of a site or RSS feed
+										</FormSettingExplanation>
+									</FormFieldset>
+									<FormButtonsBar>
+										<FormButton
+											primary
+											onClick={ () => {
+												if ( addFeedText.current?.value ) {
+													dispatch(
+														addReaderListFeedByUrl(
+															list.owner,
+															list.slug,
+															addFeedText.current.value
+														)
+													);
+												}
+											} }
+										>
+											Add
+										</FormButton>
+									</FormButtonsBar>
+								</Card>
+								{ props.listItems?.map( ( item ) => (
+									<ListItem key={ item.ID } item={ item } />
+								) ) }
+							</>
+						) }
 					</>
 				) }
 			</Main>

@@ -31,6 +31,7 @@ import {
 } from 'state/reader/action-types';
 
 import 'state/data-layer/wpcom/read/lists/items';
+import 'state/data-layer/wpcom/read/lists/feeds/new';
 import 'state/reader/init';
 
 /**

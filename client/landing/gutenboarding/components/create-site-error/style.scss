@@ -22,16 +22,11 @@
 		padding: 1em;
 		padding: 0 20px 20px;
 
-		position: absolute;
-		top: 25%;
-		left: 50%;
-		width: 100%;
 		max-width: 540px;
-		transform: translateX( -50% );
+		margin: 10vh auto;
 
 		@include break-mobile {
-			top: 35%;
-			left: 20%;
+			margin: 30vh auto auto 10vw;
 		}
 
 		.create-site-error__heading {
